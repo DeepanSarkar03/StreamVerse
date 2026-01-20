@@ -5,20 +5,20 @@ import { VideoCard } from './video-card';
 import type { Video } from '@/lib/types';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
-import { Loader2, Search } from 'lucide-react';
+import { Loader2, Search, AlertTriangle } from 'lucide-react';
 import { filterVideos } from '@/ai/flows/filter-videos-flow';
 import { useToast } from '@/hooks/use-toast';
 
 export function VideoGrid({ initialVideos, fetchErrorMessage }: { initialVideos: Video[], fetchErrorMessage: string | null }) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredVideos, setFilteredVideos] = useState<Video[]>(fetchErrorMessage ? [] : initialVideos);
+  const [filteredVideos, setFilteredVideos] = useState<Video[]>(initialVideos);
   const [isSearching, startTransition] = useTransition();
   const { toast } = useToast();
 
   const allVideoTitles = useMemo(() => initialVideos.map(v => v.title), [initialVideos]);
 
   const handleSearch = () => {
-    if (fetchErrorMessage || initialVideos.length === 0) return;
+    if (initialVideos.length === 0) return;
 
     startTransition(async () => {
       if (!searchTerm.trim()) {
@@ -50,7 +50,7 @@ export function VideoGrid({ initialVideos, fetchErrorMessage }: { initialVideos:
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
     if (e.target.value.trim() === '') {
-      setFilteredVideos(fetchErrorMessage ? [] : initialVideos);
+      setFilteredVideos(initialVideos);
     }
   };
 
@@ -60,6 +60,8 @@ export function VideoGrid({ initialVideos, fetchErrorMessage }: { initialVideos:
       handleSearch();
     }
   };
+
+  const hasVideos = initialVideos.length > 0;
 
   return (
     <div className="flex flex-col gap-8">
@@ -73,10 +75,10 @@ export function VideoGrid({ initialVideos, fetchErrorMessage }: { initialVideos:
             value={searchTerm}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            disabled={!!fetchErrorMessage || initialVideos.length === 0}
+            disabled={!hasVideos || isSearching}
           />
         </div>
-        <Button onClick={handleSearch} disabled={isSearching || !!fetchErrorMessage || initialVideos.length === 0}>
+        <Button onClick={handleSearch} disabled={!hasVideos || isSearching}>
           {isSearching ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
@@ -86,31 +88,37 @@ export function VideoGrid({ initialVideos, fetchErrorMessage }: { initialVideos:
         </Button>
       </div>
 
-      {fetchErrorMessage ? (
-         <div className="flex flex-col items-center justify-center text-center text-destructive h-64 bg-destructive/10 rounded-lg">
-            <h2 className="text-2xl font-bold">Could not load videos</h2>
-            <p className="max-w-md mt-2">There was an issue connecting to Google Drive or OneDrive. Please ensure your API keys, tokens, and folder IDs in `.env.local` are correct and have the necessary permissions.</p>
+      {fetchErrorMessage && (
+         <div className="flex flex-col items-center justify-center text-center text-destructive h-auto bg-destructive/10 rounded-lg p-6">
+            <AlertTriangle className="h-10 w-10 mb-4" />
+            <h2 className="text-xl font-bold">An error occurred while fetching videos.</h2>
+            <p className="max-w-xl mt-2 text-sm text-destructive/80">
+              Please check your `.env.local` file. It's common for access tokens to expire. You may need to generate a new one.
+            </p>
+            <code className="mt-4 p-2 bg-black/20 text-xs rounded-md w-full max-w-xl text-left overflow-auto">
+              {fetchErrorMessage}
+            </code>
           </div>
-      ) : initialVideos.length === 0 ? (
+      )}
+
+      {!hasVideos && !fetchErrorMessage ? (
         <div className="flex flex-col items-center justify-center text-center text-muted-foreground h-64">
           <h2 className="text-2xl font-bold">No Videos Found</h2>
           <p>Your configured folders might be empty.</p>
           <p>Try uploading some videos to get started!</p>
         </div>
+      ) : hasVideos && filteredVideos.length === 0 && searchTerm ? (
+         <div className="flex flex-col items-center justify-center text-center text-muted-foreground h-64">
+            <h2 className="text-2xl font-bold">No Results Found</h2>
+            <p>Your AI-powered search for "{searchTerm}" did not find any matches.</p>
+          </div>
       ) : (
         <div className={isSearching ? 'opacity-50 transition-opacity duration-300' : ''}>
-          {filteredVideos.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-x-4 gap-y-8">
-              {filteredVideos.map((video) => (
-                <VideoCard key={video.id} video={video} />
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center text-center text-muted-foreground h-64">
-              <h2 className="text-2xl font-bold">No Results Found</h2>
-              <p>Your AI-powered search for "{searchTerm}" did not find any matches.</p>
-            </div>
-          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-x-4 gap-y-8">
+            {filteredVideos.map((video) => (
+              <VideoCard key={video.id} video={video} />
+            ))}
+          </div>
         </div>
       )}
     </div>

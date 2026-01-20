@@ -1,14 +1,32 @@
 import { NextResponse } from 'next/server';
 
 async function getGoogleDriveUrl(id: string): Promise<string | null> {
-    const apiKey = process.env.GOOGLE_DRIVE_API_KEY;
-    if (!apiKey) {
-        console.error("Google Drive API key is not set.");
+    const accessToken = process.env.GOOGLE_DRIVE_ACCESS_TOKEN;
+    if (!accessToken) {
+        console.error("Google Drive access token is not set for streaming.");
         return null;
     }
-    // GDrive URLs are static and can be constructed directly.
-    return `https://www.googleapis.com/drive/v3/files/${id}?alt=media&key=${apiKey}`;
+
+    // For private files, we can't use a simple media link with an API key.
+    // We must use a method that works with authentication. The webContentLink
+    // is a link that, when visited, redirects to a temporary, streamable URL.
+    const res = await fetch(`https://www.googleapis.com/drive/v3/files/${id}?fields=webContentLink`, {
+        headers: {
+            Authorization: `Bearer ${accessToken}`,
+        },
+        cache: 'no-store' // The resulting URL is temporary, so we shouldn't cache this request.
+    });
+
+    if (!res.ok) {
+        const errorText = await res.text();
+        console.error("Failed to fetch Google Drive file metadata for streaming:", errorText);
+        return null;
+    }
+
+    const data = await res.json();
+    return data.webContentLink || null;
 }
+
 
 async function getOneDriveUrl(id: string): Promise<string | null> {
     const accessToken = process.env.ONEDRIVE_ACCESS_TOKEN;
@@ -16,6 +34,7 @@ async function getOneDriveUrl(id: string): Promise<string | null> {
         console.error("OneDrive access token is not set.");
         return null;
     }
+    // OneDrive provides a pre-authenticated, short-lived download URL directly.
     const res = await fetch(`https://graph.microsoft.com/v1.0/me/drive/items/${id}?$select=id,@microsoft.graph.downloadUrl`, {
         headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -54,10 +73,12 @@ export async function GET(request: Request, { params }: { params: { videoId: str
     }
 
     if (!url) {
-        return NextResponse.json({ error: 'Could not retrieve video URL.' }, { status: 404 });
+        return NextResponse.json({ error: `Could not retrieve video URL from ${source}. The file may not be accessible or the provider token may have expired.` }, { status: 404 });
     }
 
-    return NextResponse.json({ url });
+    // For Google Drive, the webContentLink redirects. For other providers, it might be direct.
+    // Instead of returning JSON, we can redirect the client directly to the streamable URL.
+    return NextResponse.redirect(url, { status: 302 });
 
   } catch (error) {
     console.error(`Error fetching video URL for ${videoId}:`, error);
