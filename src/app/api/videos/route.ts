@@ -83,7 +83,7 @@ async function getOneDriveVideos(): Promise<VideoProviderResult> {
     return { videos: [], error: message };
   }
 
-  const url = `https://graph.microsoft.com/v1.0/me/drive/items/${folderId}/children?$expand=thumbnails(select=large)&$select=id,name,file,thumbnails`;
+  const url = `https://graph.microsoft.com/v1.0/me/drive/items/${folderId}/children?$select=id,name,file&$expand=thumbnails(select=large)`;
   
   try {
     const res = await fetch(url, {
