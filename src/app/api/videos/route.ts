@@ -23,23 +23,29 @@ const validGdriveMimeTypes = ['video/mp4', 'video/x-matroska', 'video/quicktime'
 const placeholderThumbnail = PlaceHolderImages.find(p => p.id === 'video-thumbnail')?.imageUrl || 'https://picsum.photos/seed/streamverse-thumb/400/225';
 
 async function getGoogleDriveVideos(): Promise<Video[]> {
-  const apiKey = process.env.GOOGLE_DRIVE_API_KEY;
+  const accessToken = process.env.GOOGLE_DRIVE_ACCESS_TOKEN;
   const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
 
-  if (!apiKey || !folderId) {
-    console.warn("Google Drive environment variables are not fully set. Skipping Google Drive.");
+  if (!accessToken || !folderId) {
+    console.warn("Google Drive environment variables are not fully set (access token or folder ID). Skipping Google Drive.");
     return [];
   }
 
   const mimeTypeQuery = validGdriveMimeTypes.map(m => `mimeType='${m}'`).join(' or ');
   const query = `'${folderId}' in parents and (${mimeTypeQuery}) and trashed=false`;
   const fields = 'files(id,name,thumbnailLink)';
-  const url = `https://www.googleapis.com/drive/v3/files?key=${apiKey}&q=${encodeURIComponent(query)}&fields=${encodeURIComponent(fields)}&pageSize=100`;
+  const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}&fields=${encodeURIComponent(fields)}&pageSize=100`;
 
-  const res = await fetch(url, { next: { revalidate: 3600 } }); // Cache for 1 hour
+  const res = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    next: { revalidate: 3600 }, // Cache for 1 hour
+  });
+
   if (!res.ok) {
     const error = await res.json();
-    console.error("Failed to fetch from Google Drive:", error.error.message);
+    console.error("Failed to fetch from Google Drive:", error.error ? error.error.message : 'Unknown error');
     return [];
   }
   const data = await res.json();
