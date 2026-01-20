@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { BlobServiceClient } from '@azure/storage-blob';
+import { Readable } from 'stream';
 
 export async function uploadVideo(prevState: any, formData: FormData) {
   const file = formData.get('file') as File | null;
@@ -14,10 +15,10 @@ export async function uploadVideo(prevState: any, formData: FormData) {
     return { error: 'Invalid destination.' };
   }
 
-  // Azure Blob Storage has limits, but they are very high (terabytes).
   // We'll keep a reasonable limit to prevent accidental large uploads.
-  if (file.size > 500 * 1024 * 1024) { // 500 MB limit
-    return { error: 'File is too large. Please upload files under 500MB.' };
+  // This is a safeguard, but the streaming approach can handle much larger files.
+  if (file.size > 5 * 1024 * 1024 * 1024) { // 5 GB limit
+    return { error: 'File is too large. Please upload files under 5GB.' };
   }
 
   try {
@@ -37,9 +38,11 @@ export async function uploadVideo(prevState: any, formData: FormData) {
     const blobName = file.name; // Use the original file name as the blob name
     const blockBlobClient = containerClient.getBlockBlobClient(blobName);
     
-    const arrayBuffer = await file.arrayBuffer();
+    // This is the critical fix: Use streams to avoid loading the entire file into memory.
+    // Convert the web stream from the File object to a Node.js stream that the Azure SDK expects.
+    const nodeStream = Readable.fromWeb(file.stream() as any);
 
-    await blockBlobClient.uploadData(arrayBuffer, {
+    await blockBlobClient.uploadStream(nodeStream, undefined, undefined, {
         blobHTTPHeaders: { blobContentType: file.type }
     });
 
