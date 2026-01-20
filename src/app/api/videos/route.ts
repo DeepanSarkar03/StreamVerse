@@ -28,8 +28,8 @@ async function getOneDriveVideos(): Promise<VideoProviderResult> {
     return { videos: [], error: "OneDrive is not configured in .env.local." };
   }
 
-  // Correctly request thumbnails by expanding them.
-  const url = `https://graph.microsoft.com/v1.0/me/drive/items/${folderId}/children?$select=id,name,file,thumbnails(select=large)`;
+  // Select base properties and expand thumbnails separately.
+  const url = `https://graph.microsoft.com/v1.0/me/drive/items/${folderId}/children?$select=id,name,file&$expand=thumbnails(select=large)`;
   
   try {
     const res = await fetch(url, {
