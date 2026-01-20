@@ -10,21 +10,27 @@ async function uploadToOneDrive(file: File) {
     throw new Error('OneDrive environment variables are not set.');
   }
 
+  // Convert file to ArrayBuffer to send to OneDrive API
+  const fileBuffer = await file.arrayBuffer();
+
   const res = await fetch(`https://graph.microsoft.com/v1.0/me/drive/items/${folderId}:/${encodeURIComponent(file.name)}:/content`, {
     method: 'PUT',
     headers: {
       Authorization: `Bearer ${accessToken}`,
       'Content-Type': file.type,
     },
-    body: file.stream(),
-    // @ts-ignore
-    duplex: 'half',
+    body: fileBuffer,
   });
 
   if (!res.ok) {
-    const error = await res.json();
-    console.error('OneDrive upload failed:', error);
-    throw new Error(`OneDrive upload failed: ${error.error.message}`);
+    const errorText = await res.text();
+    console.error('OneDrive upload failed response:', errorText);
+    try {
+        const errorJson = JSON.parse(errorText);
+        throw new Error(`OneDrive upload failed: ${errorJson.error.message}`);
+    } catch (e) {
+        throw new Error(`OneDrive upload failed with non-JSON response: ${errorText}`);
+    }
   }
 
   return res.json();
