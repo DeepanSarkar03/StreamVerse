@@ -64,7 +64,7 @@ async function uploadToOneDrive(file: File) {
 }
 
 
-export async function uploadVideo(formData: FormData) {
+export async function uploadVideo(prevState: any, formData: FormData) {
   const file = formData.get('file') as File | null;
   const destination = formData.get('destination') as 'gdrive' | 'onedrive' | null;
 

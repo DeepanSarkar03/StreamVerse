@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { useFormStatus } from 'react-dom';
+import { useState, useRef, useEffect } from 'react';
+import { useFormStatus, useFormState } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -40,50 +40,45 @@ function SubmitButton() {
 
 export function UploadDialog() {
   const [open, setOpen] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState('');
   const formRef = useRef<HTMLFormElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const [state, formAction] = useFormState(uploadVideo, null);
+
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
-        setFile(selectedFile);
         setFileName(selectedFile.name);
+    } else {
+        setFileName('');
     }
   };
 
   const clearFile = () => {
-    setFile(null);
     setFileName('');
     if (fileInputRef.current) {
         fileInputRef.current.value = '';
     }
   };
-
-  const onFormAction = async (formData: FormData) => {
-    if (file) {
-      formData.set('file', file);
-    }
-
-    const result = await uploadVideo(formData);
-    if (result.error) {
+  
+  useEffect(() => {
+    if (!state) return;
+    if (state.error) {
       toast({
         variant: 'destructive',
         title: 'Upload Failed',
-        description: result.error,
+        description: state.error,
       });
-    } else {
+    } else if (state.success) {
       toast({
         title: 'Upload Successful',
-        description: result.success,
+        description: state.success,
       });
       setOpen(false);
-      clearFile();
-      formRef.current?.reset();
     }
-  };
+  }, [state, toast]);
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => {
@@ -106,7 +101,7 @@ export function UploadDialog() {
             Select a video file and choose where to upload it. The app will refresh automatically.
           </DialogDescription>
         </DialogHeader>
-        <form ref={formRef} action={onFormAction}>
+        <form ref={formRef} action={formAction}>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="file">Video File</Label>
