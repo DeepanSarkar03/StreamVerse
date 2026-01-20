@@ -1,3 +1,10 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "video-thumbnail",
+      "description": "A placeholder for video thumbnails.",
+      "imageUrl": "https://images.unsplash.com/photo-1652953373910-4a166631a3a6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8YWJzdHJhY3QlMjBjaW5lbWF8ZW58MHx8fHwxNzY4ODAyMTY3fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "abstract cinema"
+    }
+  ]
 }
