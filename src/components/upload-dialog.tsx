@@ -100,7 +100,7 @@ export function UploadDialog() {
         <DialogHeader>
           <DialogTitle>Upload a Video</DialogTitle>
           <DialogDescription>
-            Select a video file to upload to OneDrive. The app will refresh automatically.
+            Select a video file to upload to Azure Blob Storage. The app will refresh automatically.
           </DialogDescription>
         </DialogHeader>
         <form ref={formRef} action={formAction}>
@@ -142,7 +142,7 @@ export function UploadDialog() {
                 )}
               </Label>
             </div>
-            <input type="hidden" name="destination" value="onedrive" />
+            <input type="hidden" name="destination" value="azure" />
           </div>
           <DialogFooter>
             <SubmitButton />

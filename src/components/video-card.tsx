@@ -5,9 +5,9 @@ import Link from 'next/link';
 import type { Video } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
-const OneDriveIcon = () => (
-  <svg viewBox="0 0 48 48" className="h-5 w-5">
-    <path fill="#0078d4" d="M12.2 14.2c-2.4 1-4.1 3.2-4.1 5.9 0 3.5 2.8 6.3 6.3 6.3h22.4c2.8 0 5-2.2 5-5s-2.2-5-5-5c-1.3 0-2.5.5-3.4 1.4-.8-3.1-3.6-5.4-6.9-5.4-3.1 0-5.7 2-6.7 4.8-.4-.1-.8-.2-1.2-.2-2.9.1-5.3 2.4-5.4 5.2z" />
+const AzureIcon = () => (
+  <svg viewBox="0 0 48 48" className="h-5 w-5" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M18.72 8.44L6.24 12.35L11.4 27.81L2.21 32.48L17.16 43.71L22.25 31.84L30.93 37.7L45.79 19.38L18.72 8.44Z" fill="#0078D4"/>
   </svg>
 );
 
@@ -15,7 +15,7 @@ const OneDriveIcon = () => (
 export function VideoCard({ video }: { video: Video }) {
     
   return (
-    <Link href={`/watch/${video.id}`} className="group space-y-2" title={video.title}>
+    <Link href={`/watch/${encodeURIComponent(video.id)}`} className="group space-y-2" title={video.title}>
       <div className="aspect-video w-full overflow-hidden rounded-md bg-card shadow-lg transition-all duration-300 group-hover:scale-105 group-hover:shadow-primary/20">
         <Image
           src={video.thumbnail}
@@ -39,7 +39,7 @@ export function VideoCard({ video }: { video: Video }) {
           {video.title}
         </h3>
         <div className="shrink-0 pt-0.5">
-          <OneDriveIcon />
+          <AzureIcon />
         </div>
       </div>
     </Link>

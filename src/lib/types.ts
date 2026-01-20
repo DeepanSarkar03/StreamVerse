@@ -1,6 +1,6 @@
 export interface Video {
-  id: string; // composite id: `onedrive-${file.id}`
+  id: string; // The blob name in Azure Storage
   title: string;
   thumbnail: string;
-  source: 'onedrive';
+  source: 'azure';
 }

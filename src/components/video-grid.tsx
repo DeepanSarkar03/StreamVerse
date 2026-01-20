@@ -93,7 +93,7 @@ export function VideoGrid({ initialVideos, fetchErrorMessage }: { initialVideos:
             <AlertTriangle className="h-10 w-10 mb-4" />
             <h2 className="text-xl font-bold">An error occurred while fetching videos.</h2>
             <p className="max-w-xl mt-2 text-sm text-destructive/80">
-              Please check your `.env.local` file. It's common for access tokens to expire. You may need to generate a new one.
+              Please check your Azure Storage environment variables in `.env.local`. The connection string or container name might be incorrect.
             </p>
             <code className="mt-4 p-2 bg-black/20 text-xs rounded-md w-full max-w-xl text-left overflow-auto">
               {fetchErrorMessage}
@@ -104,7 +104,7 @@ export function VideoGrid({ initialVideos, fetchErrorMessage }: { initialVideos:
       {!hasVideos && !fetchErrorMessage ? (
         <div className="flex flex-col items-center justify-center text-center text-muted-foreground h-64">
           <h2 className="text-2xl font-bold">No Videos Found</h2>
-          <p>Your configured folders might be empty.</p>
+          <p>Your Azure Blob Storage container might be empty.</p>
           <p>Try uploading some videos to get started!</p>
         </div>
       ) : hasVideos && filteredVideos.length === 0 && searchTerm ? (

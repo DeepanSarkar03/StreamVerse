@@ -1,50 +1,52 @@
 import { NextResponse } from 'next/server';
+import { BlobServiceClient } from '@azure/storage-blob';
 
-async function getOneDriveUrl(id: string): Promise<string | null> {
-    const accessToken = process.env.ONEDRIVE_ACCESS_TOKEN;
-    if (!accessToken) {
-        console.error("OneDrive access token is not set.");
+async function getAzureUrl(blobName: string): Promise<string | null> {
+    const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING;
+    const containerName = process.env.AZURE_STORAGE_CONTAINER_NAME;
+    if (!connectionString || !containerName) {
+        console.error("Azure Storage environment variables are not set.");
         return null;
     }
-    // OneDrive provides a pre-authenticated, short-lived download URL directly.
-    const res = await fetch(`https://graph.microsoft.com/v1.0/me/drive/items/${id}?$select=id,@microsoft.graph.downloadUrl`, {
-        headers: {
-            Authorization: `Bearer ${accessToken}`,
-        },
-        next: {
-            revalidate: 0 // Always fetch a fresh URL
+    try {
+        const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
+        const containerClient = blobServiceClient.getContainerClient(containerName);
+        const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+        
+        // This relies on the blob container having public access enabled.
+        // The upload action attempts to set this on container creation.
+        const exists = await blockBlobClient.exists();
+        if (!exists) {
+            return null;
         }
-    });
 
-    if (!res.ok) {
-        console.error("Failed to fetch OneDrive item", await res.text());
+        return blockBlobClient.url;
+    } catch (e) {
+        console.error("Failed to get Azure blob URL", e);
         return null;
     }
-
-    const data = await res.json();
-    return data['@microsoft.graph.downloadUrl'] || null;
 }
 
 
 export async function GET(request: Request, { params }: { params: { videoId: string } }) {
-  const { videoId } = params;
-  const [source, id] = videoId.split(/-(.*)/s);
+  const { videoId } = params; // videoId is the URL-decoded blob name
 
-  if (!source || !id || source !== 'onedrive') {
-    return NextResponse.json({ error: 'Invalid video ID format. Expected "onedrive-ID".' }, { status: 400 });
+  if (!videoId) {
+    return NextResponse.json({ error: 'Invalid video ID format.' }, { status: 400 });
   }
 
   try {
-    const url = await getOneDriveUrl(id);
+    const url = await getAzureUrl(videoId);
 
     if (!url) {
-        return NextResponse.json({ error: `Could not retrieve video URL from onedrive. The file may not be accessible or the provider token may have expired.` }, { status: 404 });
+        return NextResponse.json({ error: `Could not retrieve video URL from Azure. The file may not be accessible or the container's public access level may be incorrect.` }, { status: 404 });
     }
 
-    // Instead of returning JSON, we can redirect the client directly to the streamable URL.
+    // Redirect the client directly to the streamable URL.
     return NextResponse.redirect(url, { status: 302 });
 
-  } catch (error) {
+  } catch (error)
+  {
     console.error(`Error fetching video URL for ${videoId}:`, error);
     return NextResponse.json({ error: 'Internal server error.' }, { status: 500 });
   }

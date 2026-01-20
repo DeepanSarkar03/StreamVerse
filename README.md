@@ -1,12 +1,12 @@
 # StreamVerse
 
-StreamVerse is a super-simple, Netflix-like streaming web app that allows you to stream videos from your personal Google Drive and OneDrive folders.
+StreamVerse is a super-simple, Netflix-like streaming web app that allows you to stream videos from your personal Azure Blob Storage container.
 
 ## Core Features
 
-- **Unified Library**: Automatically lists and merges video files from specified Google Drive and OneDrive folders.
+- **Unified Library**: Automatically lists video files from your specified Azure Blob Storage container.
 - **Direct Streaming**: Stream videos directly in the browser with a clean, native player interface.
-- **Easy Uploads**: Upload new videos directly to your Google Drive or OneDrive from within the app.
+- **Easy Uploads**: Upload new videos directly to your Azure Blob Storage container from within the app.
 - **Instant Search**: Quickly find videos with client-side search.
 - **Netflix-inspired UI**: A modern, dark-themed interface for a cinematic browsing experience.
 
@@ -15,6 +15,7 @@ StreamVerse is a super-simple, Netflix-like streaming web app that allows you to
 - **Framework**: [Next.js](https://nextjs.org/) (App Router, Server Components, Server Actions)
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 - **UI Components**: [shadcn/ui](https://ui.shadcn.com/)
+- **Storage**: [Azure Blob Storage](https://azure.microsoft.com/en-us/products/storage/blobs)
 - **Deployment**: Ready for Vercel, Netlify, or self-hosting.
 
 ## Setup
@@ -31,11 +32,18 @@ StreamVerse is a super-simple, Netflix-like streaming web app that allows you to
     ```
 
 3.  **Set up environment variables:**
-    Create a file named `.env.local` in the root of the project by copying the example file:
-    ```bash
-    cp .env.local.example .env.local
+    Create a file named `.env.local` in the root of the project and add the following variables:
+    
     ```
-    Fill in the required values in `.env.local`. See the comments in the file for guidance on where to get each key and ID.
+    # Your full Azure Storage connection string.
+    # Find this in the Azure Portal under your Storage Account > Access keys.
+    AZURE_STORAGE_CONNECTION_STRING="DefaultEndpointsProtocol=https;AccountName=...;AccountKey=...;EndpointSuffix=core.windows.net"
+
+    # The name of the blob container where your videos are stored.
+    AZURE_STORAGE_CONTAINER_NAME="videos"
+    ```
+    
+    **Important**: For video streaming to work, your container's public access level must be set to "Blob (anonymous read access for blobs only)". The upload action will attempt to create the container with this setting if it doesn't exist.
 
 4.  **Run the development server:**
     ```bash
@@ -47,6 +55,6 @@ StreamVerse is a super-simple, Netflix-like streaming web app that allows you to
 
 The backend is implemented using Next.js Route Handlers and Server Actions.
 
--   `GET /api/videos`: Fetches, merges, and returns a list of video files from both Google Drive and OneDrive.
--   `GET /api/video/[videoId]`: Returns a fresh, streamable URL for a specific video, used by the player page.
--   **Server Action (`uploadVideo`)**: Handles multipart form data for uploading files to the selected cloud storage provider, ensuring API keys are not exposed on the client.
+-   `GET /api/videos`: Fetches and returns a list of video files from Azure Blob Storage.
+-   `GET /api/video/[blobName]`: Returns a public, streamable URL for a specific video.
+-   **Server Action (`uploadVideo`)**: Handles multipart form data for uploading files to Azure Blob Storage, ensuring the connection string is not exposed on the client.

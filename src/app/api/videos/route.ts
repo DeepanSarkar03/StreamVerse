@@ -1,18 +1,9 @@
-// @ts-nocheck
 import { NextResponse } from 'next/server';
 import type { Video } from '@/lib/types';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { BlobServiceClient } from '@azure/storage-blob';
 
-interface OneDriveFile {
-  id: string;
-  name: string;
-  file: {
-    mimeType: string;
-  };
-  thumbnails: { large?: { url: string } }[];
-}
-
-interface VideoProviderResult {
+interface AzureProviderResult {
   videos: Video[];
   error: string | null;
 }
@@ -20,56 +11,46 @@ interface VideoProviderResult {
 const validVideoExtensions = ['.mp4', '.mkv', '.mov', '.avi', '.webm'];
 const placeholderThumbnail = PlaceHolderImages.find(p => p.id === 'video-thumbnail')?.imageUrl || 'https://picsum.photos/seed/streamverse-thumb/400/225';
 
-async function getOneDriveVideos(): Promise<VideoProviderResult> {
-  const accessToken = process.env.ONEDRIVE_ACCESS_TOKEN;
-  const folderId = process.env.ONEDRIVE_FOLDER_ID;
+async function getAzureVideos(): Promise<AzureProviderResult> {
+  const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING;
+  const containerName = process.env.AZURE_STORAGE_CONTAINER_NAME;
 
-  if (!accessToken || !folderId) {
-    return { videos: [], error: "OneDrive is not configured in .env.local." };
+  if (!connectionString || !containerName) {
+    return { videos: [], error: "Azure Blob Storage is not configured in .env.local." };
   }
-
-  // The `(select=large)` parameter was causing an error.
-  // The correct approach is to simply expand thumbnails, and the API will return a set of available sizes.
-  const url = `https://graph.microsoft.com/v1.0/me/drive/items/${folderId}/children?$select=id,name,file&$expand=thumbnails`;
   
   try {
-    const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-      next: { revalidate: 0 }, // Don't cache list
-    });
-
-    if (!res.ok) {
-      const error = await res.json();
-      const message = error.error?.message || 'An unknown error occurred.';
-      console.error("Failed to fetch from OneDrive:", message);
-      return { videos: [], error: `OneDrive: ${message}` };
+    const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
+    const containerClient = blobServiceClient.getContainerClient(containerName);
+    
+    const videos: Video[] = [];
+    for await (const blob of containerClient.listBlobsFlat()) {
+      if (validVideoExtensions.some(ext => blob.name.toLowerCase().endsWith(ext))) {
+        videos.push({
+          id: blob.name, // The id is the blob name
+          title: blob.name.replace(/\.[^/.]+$/, ""),
+          thumbnail: placeholderThumbnail, // Azure doesn't auto-generate video thumbnails.
+          source: 'azure',
+        });
+      }
     }
-
-    const data = await res.json();
-    const videos = (data.value || [])
-      .filter((file: OneDriveFile) => file.file && validVideoExtensions.some(ext => file.name.toLowerCase().endsWith(ext)))
-      .map((file: OneDriveFile) => ({
-        id: `onedrive-${file.id}`,
-        title: file.name.replace(/\.[^/.]+$/, ""),
-        thumbnail: file.thumbnails?.[0]?.large?.url || placeholderThumbnail,
-        source: 'onedrive',
-      }));
     
     return { videos, error: null };
+
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
-    console.error("Network or parsing error fetching from OneDrive:", message);
-    return { videos: [], error: `OneDrive: ${message}` };
+    console.error("Error fetching from Azure Blob Storage:", message);
+    return { videos: [], error: `Azure: ${message}` };
   }
 }
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  const onedriveResult = await getOneDriveVideos();
+  const azureResult = await getAzureVideos();
 
-  const allVideos = [...onedriveResult.videos];
-  const allErrors = [onedriveResult.error].filter((e): e is string => e !== null);
+  const allVideos = [...azureResult.videos];
+  const allErrors = [azureResult.error].filter((e): e is string => e !== null);
     
   allVideos.sort((a, b) => a.title.localeCompare(b.title));
 
