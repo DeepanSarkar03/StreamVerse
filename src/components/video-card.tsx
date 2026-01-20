@@ -5,14 +5,6 @@ import Link from 'next/link';
 import type { Video } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
-const GoogleDriveIcon = () => (
-  <svg viewBox="0 0 48 48" className="h-5 w-5">
-    <path fill="#1da754" d="m15.4 39.8-7.7 13.3 15.4 1 7.7-13.3z" transform="translate(-7.7 -15.8)"/>
-    <path fill="#ffc10f" d="m38.5 39.8-7.7 13.3-15.4-1 7.7-13.3z" transform="translate(-7.7 -15.8)"/>
-    <path fill="#2583ee" d="m15.4 14.2 7.7-13.2 15.4 1-7.7 13.2z" transform="translate(-7.7 -15.8)"/>
-  </svg>
-);
-
 const OneDriveIcon = () => (
   <svg viewBox="0 0 48 48" className="h-5 w-5">
     <path fill="#0078d4" d="M12.2 14.2c-2.4 1-4.1 3.2-4.1 5.9 0 3.5 2.8 6.3 6.3 6.3h22.4c2.8 0 5-2.2 5-5s-2.2-5-5-5c-1.3 0-2.5.5-3.4 1.4-.8-3.1-3.6-5.4-6.9-5.4-3.1 0-5.7 2-6.7 4.8-.4-.1-.8-.2-1.2-.2-2.9.1-5.3 2.4-5.4 5.2z" />
@@ -47,7 +39,7 @@ export function VideoCard({ video }: { video: Video }) {
           {video.title}
         </h3>
         <div className="shrink-0 pt-0.5">
-          {video.source === 'gdrive' ? <GoogleDriveIcon /> : <OneDriveIcon />}
+          <OneDriveIcon />
         </div>
       </div>
     </Link>

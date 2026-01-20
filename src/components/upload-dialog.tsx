@@ -14,7 +14,6 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
 import { uploadVideo } from '@/app/actions';
 import { Loader2, UploadCloud, FileVideo, X } from 'lucide-react';
@@ -98,7 +97,7 @@ export function UploadDialog() {
         <DialogHeader>
           <DialogTitle>Upload a Video</DialogTitle>
           <DialogDescription>
-            Select a video file and choose where to upload it. The app will refresh automatically.
+            Select a video file to upload to OneDrive. The app will refresh automatically.
           </DialogDescription>
         </DialogHeader>
         <form ref={formRef} action={formAction}>
@@ -119,19 +118,7 @@ export function UploadDialog() {
                 <Input id="file" name="file" type="file" required accept="video/*" onChange={handleFileChange} ref={fileInputRef}/>
               )}
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="destination">Upload Destination</Label>
-              <RadioGroup required name="destination" defaultValue="gdrive" className="flex gap-4">
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="gdrive" id="gdrive" />
-                  <Label htmlFor="gdrive">Google Drive</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="onedrive" id="onedrive" />
-                  <Label htmlFor="onedrive">OneDrive</Label>
-                </div>
-              </RadioGroup>
-            </div>
+            <input type="hidden" name="destination" value="onedrive" />
           </div>
           <DialogFooter>
             <SubmitButton />
