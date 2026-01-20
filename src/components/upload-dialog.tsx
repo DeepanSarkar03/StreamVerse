@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { useFormStatus, useFormState } from 'react-dom';
+import { useState, useRef, useEffect, useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -44,7 +44,7 @@ export function UploadDialog() {
   const formRef = useRef<HTMLFormElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-  const [state, formAction] = useFormState(uploadVideo, null);
+  const [state, formAction] = useActionState(uploadVideo, null);
 
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
