@@ -63,6 +63,10 @@ export function UploadDialog() {
   };
 
   const onFormAction = async (formData: FormData) => {
+    if (file) {
+      formData.set('file', file);
+    }
+
     const result = await uploadVideo(formData);
     if (result.error) {
       toast({
@@ -82,7 +86,13 @@ export function UploadDialog() {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(isOpen) => {
+        setOpen(isOpen);
+        if (!isOpen) {
+            clearFile();
+            formRef.current?.reset();
+        }
+    }}>
       <DialogTrigger asChild>
         <Button>
           <UploadCloud className="mr-2 h-4 w-4" />
