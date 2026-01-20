@@ -16,7 +16,9 @@ async function uploadToOneDrive(file: File) {
       Authorization: `Bearer ${accessToken}`,
       'Content-Type': file.type,
     },
-    body: file,
+    body: file.stream(),
+    // @ts-ignore
+    duplex: 'half',
   });
 
   if (!res.ok) {

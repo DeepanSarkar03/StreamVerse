@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useActionState, useEffect } from 'react';
 import { useFormStatus } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import {
@@ -43,24 +43,26 @@ export function UploadDialog() {
   const formRef = useRef<HTMLFormElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  
+  const [state, formAction] = useActionState(uploadVideo, null);
 
-  const clientAction = async (formData: FormData) => {
-    const result = await uploadVideo(null, formData);
+  useEffect(() => {
+    if (!state) return;
 
-    if (result?.error) {
+    if (state.error) {
       toast({
         variant: 'destructive',
         title: 'Upload Failed',
-        description: result.error,
+        description: state.error,
       });
-    } else if (result?.success) {
+    } else if (state.success) {
       toast({
         title: 'Upload Successful',
-        description: result.success,
+        description: state.success,
       });
       setOpen(false);
     }
-  };
+  }, [state, toast]);
 
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -101,7 +103,7 @@ export function UploadDialog() {
             Select a video file to upload to OneDrive. The app will refresh automatically.
           </DialogDescription>
         </DialogHeader>
-        <form ref={formRef} action={clientAction}>
+        <form ref={formRef} action={formAction}>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="file">Video File</Label>
