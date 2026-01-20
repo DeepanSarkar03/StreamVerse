@@ -55,7 +55,8 @@ export function UploadDialog() {
     }
   };
 
-  const clearFile = () => {
+  const clearFile = (e?: React.MouseEvent) => {
+    e?.preventDefault(); // Prevent label from triggering file input again
     setFileName('');
     if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -104,19 +105,45 @@ export function UploadDialog() {
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="file">Video File</Label>
-              {fileName ? (
-                <div className="flex items-center justify-between p-2 rounded-md border bg-muted/50">
+               {/*
+                The file input must always be present in the form for the submission to work correctly.
+                Instead of conditionally rendering it, we make it transparent and layer it behind a custom UI.
+                The label now acts as the clickable area.
+              */}
+              <Label htmlFor="file" className="relative block cursor-pointer">
+                <Input
+                  id="file"
+                  name="file"
+                  type="file"
+                  required
+                  accept="video/*"
+                  onChange={handleFileChange}
+                  ref={fileInputRef}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                />
+
+                {fileName ? (
+                  <div className="flex items-center justify-between p-2 h-10 rounded-md border bg-muted/50">
                     <div className="flex items-center gap-2 truncate">
-                        <FileVideo className="h-5 w-5 shrink-0 text-muted-foreground" />
-                        <span className="truncate text-sm">{fileName}</span>
+                      <FileVideo className="h-5 w-5 shrink-0 text-muted-foreground" />
+                      <span className="truncate text-sm font-normal">{fileName}</span>
                     </div>
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={clearFile}>
-                        <X className="h-4 w-4" />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 z-10"
+                      onClick={clearFile}
+                    >
+                      <X className="h-4 w-4" />
                     </Button>
-                </div>
-              ) : (
-                <Input id="file" name="file" type="file" required accept="video/*" onChange={handleFileChange} ref={fileInputRef}/>
-              )}
+                  </div>
+                ) : (
+                  <div className="flex h-10 w-full items-center justify-center rounded-md border border-input bg-background px-3 py-2 text-base md:text-sm text-muted-foreground">
+                    Click to select a file
+                  </div>
+                )}
+              </Label>
             </div>
             <input type="hidden" name="destination" value="onedrive" />
           </div>
