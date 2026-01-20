@@ -28,8 +28,9 @@ async function getOneDriveVideos(): Promise<VideoProviderResult> {
     return { videos: [], error: "OneDrive is not configured in .env.local." };
   }
 
-  // Select base properties and expand thumbnails separately.
-  const url = `https://graph.microsoft.com/v1.0/me/drive/items/${folderId}/children?$select=id,name,file&$expand=thumbnails(select=large)`;
+  // The `(select=large)` parameter was causing an error.
+  // The correct approach is to simply expand thumbnails, and the API will return a set of available sizes.
+  const url = `https://graph.microsoft.com/v1.0/me/drive/items/${folderId}/children?$select=id,name,file&$expand=thumbnails`;
   
   try {
     const res = await fetch(url, {
