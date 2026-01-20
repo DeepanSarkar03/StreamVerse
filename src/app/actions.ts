@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use server';
 
 import { revalidatePath } from 'next/cache';
@@ -14,6 +13,12 @@ export async function uploadVideo(prevState: any, formData: FormData) {
     return { error: 'Invalid destination.' };
   }
 
+  // Files larger than 250MB require a different upload method (upload session)
+  // which is more complex. For this app, we'll limit to 250MB.
+  if (file.size > 250 * 1024 * 1024) {
+    return { error: 'File is too large. Please upload files under 250MB.' };
+  }
+
   try {
     const accessToken = process.env.ONEDRIVE_ACCESS_TOKEN;
     const folderId = process.env.ONEDRIVE_FOLDER_ID;
@@ -21,20 +26,22 @@ export async function uploadVideo(prevState: any, formData: FormData) {
       return { error: 'OneDrive environment variables are not set on the server.' };
     }
 
-    const fileBuffer = await file.arrayBuffer();
+    // Use a stream to avoid loading the entire file into memory, which can cause crashes.
+    const fileStream = file.stream();
 
     const res = await fetch(`https://graph.microsoft.com/v1.0/me/drive/items/${folderId}:/${encodeURIComponent(file.name)}:/content`, {
       method: 'PUT',
       headers: {
         Authorization: `Bearer ${accessToken}`,
         'Content-Type': file.type,
+        'Content-Length': file.size.toString(), // Required for streams
       },
-      body: fileBuffer,
+      // @ts-ignore-next-line
+      body: fileStream,
     });
 
     if (!res.ok) {
         const errorText = await res.text();
-        // Try to parse the error as JSON, but fall back to text.
         let errorMessage = `Status ${res.status}: ${errorText}`;
         try {
             const errorJson = JSON.parse(errorText);
