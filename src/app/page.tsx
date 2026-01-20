@@ -31,30 +31,17 @@ function VideoGridSkeleton() {
   );
 }
 
-async function VideoList() {
+async function VideoListContainer() {
+  let videos: Video[] = [];
+  let fetchErrorMessage: string | null = null;
   try {
-    const videos = await fetchVideos();
-    
-    if (videos.length === 0) {
-      return (
-        <div className="flex flex-col items-center justify-center text-center text-muted-foreground h-64">
-          <h2 className="text-2xl font-bold">No Videos Found</h2>
-          <p>Your configured folders might be empty.</p>
-          <p>Try uploading some videos to get started!</p>
-        </div>
-      );
-    }
-    
-    return <VideoGrid videos={videos} />;
+    videos = await fetchVideos();
   } catch (error) {
-    return (
-       <div className="flex flex-col items-center justify-center text-center text-destructive h-64 bg-destructive/10 rounded-lg">
-          <h2 className="text-2xl font-bold">Could not load videos</h2>
-          <p className="max-w-md mt-2">There was an issue connecting to Google Drive or OneDrive. Please ensure your API keys, tokens, and folder IDs in `.env.local` are correct and have the necessary permissions.</p>
-        </div>
-    )
+    fetchErrorMessage = error instanceof Error ? error.message : String(error);
   }
+  return <VideoGrid initialVideos={videos} fetchErrorMessage={fetchErrorMessage} />;
 }
+
 
 export default function Home() {
   return (
@@ -62,7 +49,7 @@ export default function Home() {
       <Header />
       <main className="flex-1 p-4 md:p-8">
         <Suspense fallback={<VideoGridSkeleton />}>
-          <VideoList />
+          <VideoListContainer />
         </Suspense>
       </main>
     </div>
