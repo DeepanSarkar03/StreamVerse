@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useActionState } from 'react';
+import { useState, useRef } from 'react';
 import { useFormStatus } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import {
@@ -43,7 +43,24 @@ export function UploadDialog() {
   const formRef = useRef<HTMLFormElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-  const [state, formAction] = useActionState(uploadVideo, null);
+
+  const clientAction = async (formData: FormData) => {
+    const result = await uploadVideo(null, formData);
+
+    if (result?.error) {
+      toast({
+        variant: 'destructive',
+        title: 'Upload Failed',
+        description: result.error,
+      });
+    } else if (result?.success) {
+      toast({
+        title: 'Upload Successful',
+        description: result.success,
+      });
+      setOpen(false);
+    }
+  };
 
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -63,23 +80,6 @@ export function UploadDialog() {
     }
   };
   
-  useEffect(() => {
-    if (!state) return;
-    if (state.error) {
-      toast({
-        variant: 'destructive',
-        title: 'Upload Failed',
-        description: state.error,
-      });
-    } else if (state.success) {
-      toast({
-        title: 'Upload Successful',
-        description: state.success,
-      });
-      setOpen(false);
-    }
-  }, [state, toast]);
-
   return (
     <Dialog open={open} onOpenChange={(isOpen) => {
         setOpen(isOpen);
@@ -101,15 +101,10 @@ export function UploadDialog() {
             Select a video file to upload to OneDrive. The app will refresh automatically.
           </DialogDescription>
         </DialogHeader>
-        <form ref={formRef} action={formAction}>
+        <form ref={formRef} action={clientAction}>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="file">Video File</Label>
-               {/*
-                The file input must always be present in the form for the submission to work correctly.
-                Instead of conditionally rendering it, we make it transparent and layer it behind a custom UI.
-                The label now acts as the clickable area.
-              */}
               <Label htmlFor="file" className="relative block cursor-pointer">
                 <Input
                   id="file"
