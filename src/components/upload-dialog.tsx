@@ -734,11 +734,11 @@ export function UploadDialog() {
                     <div className="flex items-center gap-2">
                       <Check className="h-4 w-4 text-green-500" />
                       <span className="text-sm text-green-600 dark:text-green-400">
-                        🚀 Turbo Mode enabled - Signed in as {session?.user?.email}
+                        🚀 Turbo Mode enabled - Signed in as {user?.email}
                       </span>
                     </div>
                   </div>
-                ) : status === 'loading' ? (
+                ) : loading ? (
                   <div className="flex items-center gap-2 p-3 rounded-lg border">
                     <Loader2 className="h-4 w-4 animate-spin" />
                     <span className="text-sm text-muted-foreground">Checking authentication...</span>
