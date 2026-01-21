@@ -1,0 +1,19 @@
+{
+  "name": "streamverse-downloader",
+  "version": "1.0.0",
+  "description": "Azure Function for datacenter-speed video downloads",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "func start",
+    "deploy": "func azure functionapp publish streamverse-downloader"
+  },
+  "dependencies": {
+    "@azure/functions": "^4.0.0",
+    "@azure/storage-blob": "^12.17.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0"
+  }
+}

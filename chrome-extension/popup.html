@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      width: 350px;
+      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f0f23;
+      color: #e0e0e0;
+    }
+    h1 {
+      font-size: 18px;
+      margin: 0 0 16px 0;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .logo {
+      font-size: 24px;
+    }
+    .status {
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 14px;
+    }
+    .status.connected {
+      background: #1a4d2e;
+      border: 1px solid #2d7a4a;
+    }
+    .status.disconnected {
+      background: #4d1a1a;
+      border: 1px solid #7a2d2d;
+    }
+    .url-input {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #333;
+      background: #1a1a2e;
+      color: #fff;
+      font-size: 14px;
+      margin-bottom: 12px;
+      box-sizing: border-box;
+    }
+    .url-input:focus {
+      outline: none;
+      border-color: #8b5cf6;
+    }
+    .name-input {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #333;
+      background: #1a1a2e;
+      color: #fff;
+      font-size: 14px;
+      margin-bottom: 12px;
+      box-sizing: border-box;
+    }
+    .download-btn {
+      width: 100%;
+      padding: 12px;
+      border-radius: 6px;
+      border: none;
+      background: linear-gradient(135deg, #8b5cf6, #6366f1);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .download-btn:hover {
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+    }
+    .download-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .progress-container {
+      margin-top: 16px;
+      display: none;
+    }
+    .progress-bar {
+      height: 8px;
+      background: #1a1a2e;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #8b5cf6, #6366f1);
+      width: 0%;
+      transition: width 0.3s;
+    }
+    .progress-text {
+      font-size: 12px;
+      color: #888;
+      margin-top: 8px;
+      text-align: center;
+    }
+    .cookie-count {
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 12px;
+    }
+    .result {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+    .result.success {
+      background: #1a4d2e;
+      color: #4ade80;
+    }
+    .result.error {
+      background: #4d1a1a;
+      color: #f87171;
+    }
+    .speed-badge {
+      background: #8b5cf6;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <h1>
+    <span class="logo">🚀</span>
+    StreamVerse Turbo
+    <span class="speed-badge">10 Gbps</span>
+  </h1>
+  
+  <div id="status" class="status connected">
+    ✅ Proxy connected - Ready for high-speed downloads
+  </div>
+  
+  <div id="cookieCount" class="cookie-count">
+    Checking Google cookies...
+  </div>
+  
+  <input type="text" id="urlInput" class="url-input" placeholder="Paste Google/YouTube URL here...">
+  <input type="text" id="nameInput" class="name-input" placeholder="Custom filename (optional)">
+  
+  <button id="downloadBtn" class="download-btn">
+    ⚡ Turbo Download with Cookies
+  </button>
+  
+  <div id="progressContainer" class="progress-container">
+    <div class="progress-bar">
+      <div id="progressFill" class="progress-fill"></div>
+    </div>
+    <div id="progressText" class="progress-text">Initializing...</div>
+  </div>
+  
+  <div id="result" class="result" style="display: none;"></div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

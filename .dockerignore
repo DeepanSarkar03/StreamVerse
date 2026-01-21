@@ -1,0 +1,38 @@
+# Dependencies
+node_modules
+npm-debug.log*
+
+# Next.js build output
+.next
+out
+
+# Environment files (add via Coolify dashboard)
+.env
+.env.local
+.env.production
+.env*.local
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage
+
+# Misc
+*.log
+.git
+.gitignore
+README.md
+docs/
+
+# Development folders
+chrome-extension/
+azure-vm-proxy/
+azure-functions/

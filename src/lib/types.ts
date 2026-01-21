@@ -3,4 +3,5 @@ export interface Video {
   title: string;
   thumbnail: string;
   source: 'azure';
+  streamUrl?: string; // Direct URL to stream from Azure
 }

@@ -23,14 +23,21 @@ async function getAzureVideos(): Promise<AzureProviderResult> {
     const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
     const containerClient = blobServiceClient.getContainerClient(containerName);
     
+    // Get the base URL for the container
+    const containerUrl = containerClient.url;
+    
     const videos: Video[] = [];
     for await (const blob of containerClient.listBlobsFlat()) {
       if (validVideoExtensions.some(ext => blob.name.toLowerCase().endsWith(ext))) {
+        // Create direct URL to the blob (works if container has public access)
+        const directUrl = `${containerUrl}/${encodeURIComponent(blob.name).replace(/%2F/g, '/')}`;
+        
         videos.push({
           id: blob.name, // The id is the blob name
           title: blob.name.replace(/\.[^/.]+$/, ""),
-          thumbnail: placeholderThumbnail, // Azure doesn't auto-generate video thumbnails.
+          thumbnail: placeholderThumbnail,
           source: 'azure',
+          streamUrl: directUrl, // Direct Azure URL for streaming
         });
       }
     }

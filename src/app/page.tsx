@@ -64,16 +64,41 @@ async function VideoListContainer() {
   return <VideoGrid initialVideos={videos} fetchErrorMessage={fetchErrorMessage} />;
 }
 
-
-export default function Home() {
+async function HomeContent() {
+  let videos: Video[] = [];
+  
+  try {
+    const result = await fetchVideos();
+    videos = result.videos;
+  } catch {
+    // Header will still work with empty videos
+  }
+  
   return (
-    <div className="flex min-h-screen w-full flex-col">
-      <Header />
+    <>
+      <Header videos={videos} />
       <main className="flex-1 p-4 md:p-8">
         <Suspense fallback={<VideoGridSkeleton />}>
           <VideoListContainer />
         </Suspense>
       </main>
+    </>
+  );
+}
+
+export default function Home() {
+  return (
+    <div className="flex min-h-screen w-full flex-col">
+      <Suspense fallback={
+        <>
+          <div className="h-14 border-b border-border/40 bg-background/95" />
+          <main className="flex-1 p-4 md:p-8">
+            <VideoGridSkeleton />
+          </main>
+        </>
+      }>
+        <HomeContent />
+      </Suspense>
     </div>
   );
 }
