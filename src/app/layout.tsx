@@ -2,7 +2,7 @@ import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
-import { SessionProvider } from "@/components/session-provider";
+import { FirebaseAuthProvider } from "@/components/firebase-auth-provider";
 import { AppProvider } from "@/hooks/use-app-context";
 import { PinGate } from "@/components/pin-gate";
 
@@ -27,7 +27,7 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
-        <SessionProvider>
+        <FirebaseAuthProvider>
           <ThemeProvider>
             <PinGate>
               <AppProvider>
@@ -36,7 +36,7 @@ export default function RootLayout({
               </AppProvider>
             </PinGate>
           </ThemeProvider>
-        </SessionProvider>
+        </FirebaseAuthProvider>
       </body>
     </html>
   );
