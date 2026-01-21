@@ -10,20 +10,25 @@ import {
   signOut,
   setPersistence,
   browserLocalPersistence,
+  getRedirectResult,
 } from 'firebase/auth';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  googleAccessToken: string | null;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
 }
+
+const AUTH_TOKEN_KEY = 'streamverse_google_access_token';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function FirebaseAuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [googleAccessToken, setGoogleAccessToken] = useState<string | null>(null);
 
   useEffect(() => {
     // Set persistence to LOCAL so user stays logged in
@@ -31,10 +36,22 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
       console.error('Error setting persistence:', error);
     });
 
+    // Load saved access token
+    const savedToken = localStorage.getItem(AUTH_TOKEN_KEY);
+    if (savedToken) {
+      setGoogleAccessToken(savedToken);
+    }
+
     // Subscribe to auth state changes
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setLoading(false);
+      
+      // Clear token if user signs out
+      if (!currentUser) {
+        localStorage.removeItem(AUTH_TOKEN_KEY);
+        setGoogleAccessToken(null);
+      }
     });
 
     return () => unsubscribe();
@@ -44,7 +61,18 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
     try {
       setLoading(true);
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      // Request access to Google Drive
+      provider.addScope('https://www.googleapis.com/auth/drive.readonly');
+      
+      const result = await signInWithPopup(auth, provider);
+      
+      // Get the Google Access Token from the credential
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      if (credential?.accessToken) {
+        setGoogleAccessToken(credential.accessToken);
+        localStorage.setItem(AUTH_TOKEN_KEY, credential.accessToken);
+        console.log('Got Google access token for Turbo downloads');
+      }
     } catch (error) {
       console.error('Error signing in with Google:', error);
       throw error;
@@ -69,6 +97,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
   const value: AuthContextType = {
     user,
     loading,
+    googleAccessToken,
     signInWithGoogle: handleSignInWithGoogle,
     signOut: handleSignOut,
   };

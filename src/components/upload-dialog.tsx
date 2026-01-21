@@ -51,10 +51,10 @@ export function UploadDialog() {
   const urlFormRef = useRef<HTMLFormElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-  const { user, loading, signInWithGoogle } = useFirebaseAuth();
+  const { user, loading, googleAccessToken, signInWithGoogle } = useFirebaseAuth();
   
-  // Check if user is signed in with Google (has Firebase auth)
-  const isGoogleAuthenticated = !!user;
+  // Check if user is signed in with Google AND has access token for Turbo
+  const isGoogleAuthenticated = !!user && !!googleAccessToken;
   
   const [uploadState, uploadFormAction] = useActionState(uploadVideo, null);
 
@@ -396,14 +396,12 @@ export function UploadDialog() {
       // Check if this is a Google URL that needs authentication
       const isAuthUrl = requiresBrowserAuth(url);
       
-      // For authenticated URLs, use Firebase user ID token
+      // For authenticated URLs, use Google OAuth access token
       if (isAuthUrl) {
-        if (isGoogleAuthenticated && user) {
-          // Get Firebase ID token for turbo download
-          const idToken = await user.getIdToken();
-          // Automatically use ID token for turbo download
+        if (isGoogleAuthenticated && googleAccessToken) {
+          // Use Google access token for turbo download
           setImportStatus('🚀 Turbo Mode: Using Google account...');
-          const success = await handleTurboProxyDownload(url, customName, downloadId, idToken);
+          const success = await handleTurboProxyDownload(url, customName, downloadId, googleAccessToken);
           
           if (success) {
             setOpen(false);
@@ -413,8 +411,8 @@ export function UploadDialog() {
             window.location.reload();
             return;
           }
-          // Token might have issues
-          setImportStatus('⚠️ Turbo download failed. Trying fallback...');
+          // Token might have issues - user needs to re-sign in
+          setImportStatus('⚠️ Turbo download failed. Please sign out and sign in again.');
         } else {
           // Not signed in - prompt for Google sign-in
           setIsImporting(false);
