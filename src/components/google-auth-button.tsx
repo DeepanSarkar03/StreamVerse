@@ -1,6 +1,6 @@
 'use client';
 
-import { signIn, signOut, useSession } from 'next-auth/react';
+import { useFirebaseAuth } from '@/components/firebase-auth-provider';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -10,12 +10,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LogIn, LogOut, Zap, Check } from 'lucide-react';
+import { LogOut, Zap, Check } from 'lucide-react';
 
 export function GoogleAuthButton() {
-  const { data: session, status } = useSession();
+  const { user, loading, signInWithGoogle, signOut } = useFirebaseAuth();
   
-  if (status === 'loading') {
+  if (loading) {
     return (
       <Button variant="ghost" size="sm" disabled>
         <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
@@ -23,27 +23,25 @@ export function GoogleAuthButton() {
     );
   }
   
-  if (session?.user) {
+  if (user) {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="sm" className="gap-2">
             <Avatar className="h-6 w-6">
-              <AvatarImage src={session.user.image || ''} alt={session.user.name || ''} />
-              <AvatarFallback>{session.user.name?.charAt(0) || 'G'}</AvatarFallback>
+              <AvatarImage src={user.photoURL || ''} alt={user.displayName || ''} />
+              <AvatarFallback>{user.displayName?.charAt(0) || 'G'}</AvatarFallback>
             </Avatar>
             <span className="hidden sm:inline-block max-w-[100px] truncate">
-              {session.user.name?.split(' ')[0]}
+              {user.displayName?.split(' ')[0]}
             </span>
-            {session.accessToken && (
-              <Zap className="h-3 w-3 text-yellow-500" />
-            )}
+            <Zap className="h-3 w-3 text-yellow-500" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
           <div className="px-2 py-1.5">
-            <p className="text-sm font-medium">{session.user.name}</p>
-            <p className="text-xs text-muted-foreground">{session.user.email}</p>
+            <p className="text-sm font-medium">{user.displayName}</p>
+            <p className="text-xs text-muted-foreground">{user.email}</p>
           </div>
           <DropdownMenuSeparator />
           <DropdownMenuItem disabled className="text-green-600">
@@ -64,7 +62,7 @@ export function GoogleAuthButton() {
     <Button 
       variant="outline" 
       size="sm" 
-      onClick={() => signIn('google')}
+      onClick={() => signInWithGoogle()}
       className="gap-2"
     >
       <svg className="h-4 w-4" viewBox="0 0 24 24">

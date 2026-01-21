@@ -2,7 +2,7 @@
 
 import { useState, useRef, useActionState, useEffect } from 'react';
 import { useFormStatus } from 'react-dom';
-import { useSession } from 'next-auth/react';
+import { useFirebaseAuth } from '@/components/firebase-auth-provider';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -18,7 +18,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { uploadVideo } from '@/app/actions';
-import { signInWithGoogle } from '@/app/auth-actions';
 import { downloadsStore } from '@/lib/downloads-store';
 import { Loader2, UploadCloud, FileVideo, X, Link, Download, Zap, Check, LogIn } from 'lucide-react';
 
@@ -52,10 +51,10 @@ export function UploadDialog() {
   const urlFormRef = useRef<HTMLFormElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-  const { data: session, status } = useSession();
+  const { user, loading, signInWithGoogle } = useFirebaseAuth();
   
-  // Check if user is signed in with Google (has access token)
-  const isGoogleAuthenticated = !!(session?.accessToken);
+  // Check if user is signed in with Google (has Firebase auth)
+  const isGoogleAuthenticated = !!user;
   
   const [uploadState, uploadFormAction] = useActionState(uploadVideo, null);
 
@@ -397,12 +396,14 @@ export function UploadDialog() {
       // Check if this is a Google URL that needs authentication
       const isAuthUrl = requiresBrowserAuth(url);
       
-      // For authenticated URLs, use Google OAuth access token
+      // For authenticated URLs, use Firebase user ID token
       if (isAuthUrl) {
-        if (isGoogleAuthenticated && session?.accessToken) {
-          // Automatically use access token for turbo download
+        if (isGoogleAuthenticated && user) {
+          // Get Firebase ID token for turbo download
+          const idToken = await user.getIdToken();
+          // Automatically use ID token for turbo download
           setImportStatus('🚀 Turbo Mode: Using Google account...');
-          const success = await handleTurboProxyDownload(url, customName, downloadId, session.accessToken as string);
+          const success = await handleTurboProxyDownload(url, customName, downloadId, idToken);
           
           if (success) {
             setOpen(false);
@@ -751,12 +752,10 @@ export function UploadDialog() {
                         <p>Sign in with Google to enable datacenter-speed downloads for Google Drive and YouTube URLs.</p>
                       </div>
                     </div>
-                    <form action={signInWithGoogle}>
-                      <Button type="submit" className="w-full" disabled={isImporting}>
-                        <LogIn className="mr-2 h-4 w-4" />
-                        Sign in with Google
-                      </Button>
-                    </form>
+                    <Button onClick={() => signInWithGoogle()} className="w-full" disabled={isImporting}>
+                      <LogIn className="mr-2 h-4 w-4" />
+                      Sign in with Google
+                    </Button>
                   </div>
                 )}
                 
